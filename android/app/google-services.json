@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "711898608881",
+    "project_id": "rafiqul-app-gallery",
+    "storage_bucket": "rafiqul-app-gallery.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:711898608881:android:ed613318abd0d88dcda550",
+        "android_client_info": {
+          "package_name": "com.appgallery.appgallery"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDU8QGwsgAbZOWz0j6ebSh6SJXb03ceyFs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
