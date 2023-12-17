@@ -1,4 +1,5 @@
 import 'package:appgallery/Bottom%20Navigation%20Bloc/bottom_navigation_bloc.dart';
+import 'package:appgallery/ViewApp%20Bloc/viewapp_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,21 +20,24 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<BottomBarBloc>(
-      create: (context) => BottomBarBloc(),
-      child: MaterialApp(
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.blue,
-            brightness: Brightness.dark
+    return MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (context) => BottomBarBloc(),),
+          BlocProvider(create: (context) => ViewAppBloc(),),
+        ],
+        child: MaterialApp(
+          title: 'App Gallery',
+          theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                  seedColor: Colors.blue,
+                  brightness: Brightness.dark
+              ),
+              useMaterial3: true,
+              fontFamily: 'Urbanist'
           ),
-          useMaterial3: true,
-          fontFamily: 'Urbanist'
-        ),
-        home: const BottomBar(),
-        debugShowCheckedModeBanner: false,
-      ),
+          home: const BottomBar(),
+          debugShowCheckedModeBanner: false,
+        )
     );
   }
 }
