@@ -1,10 +1,11 @@
 import 'dart:io';
-
+import 'package:appgallery/Models/check_permission.dart';
 import 'package:appgallery/Presentation/Widgets/image_viewer_gallery.dart';
 import 'package:appgallery/ViewApp%20Bloc/viewapp_bloc.dart';
 import 'package:appgallery/ViewApp%20Bloc/viewapp_events.dart';
 import 'package:appgallery/ViewApp%20Bloc/viewapp_states.dart';
 import 'package:device_apps/device_apps.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -43,6 +44,17 @@ class ViewApp extends StatefulWidget {
 
 class _ViewAppState extends State<ViewApp> {
 
+  //Useless
+  bool isPermission = false;
+  var checkAllPermissions = CheckPermission();
+  //
+
+  bool downloading = false;
+  bool fileExists = false;
+  double progress = 0;
+  late String filePath;
+  late CancelToken cancelToken;
+
   @override
   void initState() {
     checkApp();
@@ -63,7 +75,7 @@ class _ViewAppState extends State<ViewApp> {
     }
   }
 
-  void open(BuildContext context, final int index) {
+  void openPhotoGallery(BuildContext context, final int index) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -79,12 +91,61 @@ class _ViewAppState extends State<ViewApp> {
     );
   }
 
+  //Useless
+  checkPermission() async {
+    var permission = await checkAllPermissions.isStoragePermission();
+    if (permission) {
+      setState(() {
+        isPermission = true;
+      });
+      startDownload();
+    }
+  }
+
+  startDownload() async {
+    cancelToken = CancelToken();
+    setState(() {
+      filePath = '/storage/emulated/0/Download/${widget.name}.apk';
+      downloading = true;
+      progress = 0;
+    });
+
+    try {
+      await Dio().download(widget.fileLink, filePath,
+          onReceiveProgress: (count, total) {
+            setState(() {
+              progress = (count / total);
+              print(progress);
+            });
+          }, cancelToken: cancelToken);
+      setState(() {
+        downloading = false;
+        fileExists = true;
+      });
+      openFile();
+    } catch (e) {
+      print(e);
+      setState(() {
+        downloading = false;
+      });
+    }
+  }
+
+  openFile() {
+    OpenFile.open(filePath);
+  }
+
+  //Useless (Later)
+  cancelDownload() {
+    cancelToken.cancel();
+    setState(() {
+      downloading = false;
+    });
+  }
+
+
+  //Previously By ChatGPT
   Future<void> _downloadAndOpenFile(BuildContext context) async {
-    // Initialize the downloader
-    //await FlutterDownloader.initialize();
-
-    print(widget.fileLink);
-
     final taskId = await FlutterDownloader.enqueue(
       url: widget.fileLink,
       savedDir: '/storage/emulated/0/Download/', // Change this to the desired directory
@@ -94,17 +155,19 @@ class _ViewAppState extends State<ViewApp> {
     );
 
     FlutterDownloader.registerCallback((id, status, progress) {
-      if (id == taskId && status == DownloadTaskStatus.complete) {
+      print(3);
+      if (id == taskId && status == 3) { //DownloadTaskStatus.complete
+        print(4);
         // The download is complete, open the file
         _openDownloadedFile(context);
+        print(5);
       }
     });
   }
 
-
   Future<void> _openDownloadedFile(BuildContext context) async {
     // Replace 'your_directory' with the same directory used for downloading
-    final filePath = '/storage/emulated/0/Download/${widget.name}.apk';
+    final filePath = '/storage/emulated/0/Download/Screenshot_1.png'; ///${widget.name}.apk
 
     if (await File(filePath).exists()) {
       OpenFile.open(filePath);
@@ -165,107 +228,43 @@ class _ViewAppState extends State<ViewApp> {
     );
   }
 
-  Widget buttons(String action) {
-    return Row(
-      children: [
-        //Uninstall button
-        action != 'download' ?
-        Expanded(
-          child: Container(
-            //width: MediaQuery.of(context).size.width*0.4,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: Colors.grey.shade400),
-              color: Colors.transparent,
-            ),
-            child:  Padding(
-              padding: const EdgeInsets.only(top: 10, bottom: 10),
-              child: Center(
-                child: GestureDetector(
-                  onTap: () {
-                    DeviceApps.uninstallApp(widget.packageName);
-                  },
-                  child: Text(
-                    'Uninstall',
-                    style: TextStyle(color: Colors.blue.shade200, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        )
-            :
-        const SizedBox(),
-
-        action != 'download' ?
-        const SizedBox(width: 10,) : const SizedBox(),
-
-        //Update/open button
-        Expanded(
-          child: Container(
-            //width: MediaQuery.of(context).size.width*0.4,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(25),
-              color: Colors.blue.shade200,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.only(top: 10, bottom: 10),
-              child: Center(
-                child: action == 'update' ?
-                GestureDetector(
-                  onTap: () {
-                    _downloadAndOpenFile(context);
-                  },
-                  child: const Text(
-                    'Update',
-                    style: TextStyle(color: Colors.black),
-                  ),
-                )
-                    :
-                action == 'open' ?
-                GestureDetector(
-                  onTap: () {
-                    DeviceApps.openApp(widget.packageName);
-                  },
-                  child: const Text(
-                    'Open',
-                    style: TextStyle(color: Colors.black),
-                  ),
-                )
-                :
-                GestureDetector(
-                  child: const Text(
-                    'Download',
-                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget space(double size) {
-    return SizedBox(height: size,);
-  }
-
   Widget topAppInfo() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         //icon - image
-        SizedBox(
-          height: 80,
-          width: 80,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(15),
-            child: Image.network(
-              widget.icon,
-              fit: BoxFit.cover,
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            Visibility(
+              visible: downloading ? true : false,
+              child: SizedBox(
+                height: 65,
+                width: 65,
+                child: CircularProgressIndicator(
+                  value: progress,
+                  strokeWidth: 1.5,
+                  //backgroundColor: Colors.grey,
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue)
+                ),
+              ),
             ),
-          ),
+
+            Padding(
+              padding: EdgeInsets.all(downloading ? 15 : 0),
+              child: SizedBox(
+                height: downloading ? 40 : 80,
+                width: downloading ? 40 :  80,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: Image.network(
+                    widget.icon,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
 
         //Texts
@@ -275,11 +274,24 @@ class _ViewAppState extends State<ViewApp> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              //name
               Text(
                 widget.name,
                 style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 20
+                ),
+              ),
+              //Progress
+              Visibility(
+                visible: downloading ? true : false,
+                child: Text(
+                  '${(progress*100).toStringAsFixed(1)}% of ${widget.size}',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    color: Colors.blue.shade200
+                  ),
                 ),
               ),
               /*SizedBox(
@@ -347,6 +359,93 @@ class _ViewAppState extends State<ViewApp> {
     );
   }
 
+  Widget buttons(String action) {
+    return Row(
+      children: [
+        //Uninstall button
+        action != 'download' ?
+        Expanded(
+          child: Container(
+            //width: MediaQuery.of(context).size.width*0.4,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+              border: Border.all(color: Colors.grey.shade400),
+              color: Colors.transparent,
+            ),
+            child:  Padding(
+              padding: const EdgeInsets.only(top: 10, bottom: 10),
+              child: Center(
+                child: GestureDetector(
+                  onTap: () {
+                    DeviceApps.uninstallApp(widget.packageName);
+                  },
+                  child: Text(
+                    'Uninstall',
+                    style: TextStyle(color: Colors.blue.shade200, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        )
+            :
+        const SizedBox(),
+
+        action != 'download' ?
+        const SizedBox(width: 10,) : const SizedBox(),
+
+        //Update/open button
+        Expanded(
+          child: Container(
+            //width: MediaQuery.of(context).size.width*0.4,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+              color: Colors.blue.shade200,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 10, bottom: 10),
+              child: Center(
+                child: action == 'update' ?
+                GestureDetector(
+                  onTap: () {
+                    //_downloadAndOpenFile(context);
+                    startDownload();
+                  },
+                  child: const Text(
+                    'Update',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                )
+                    :
+                action == 'open' ?
+                GestureDetector(
+                  onTap: () {
+                    DeviceApps.openApp(widget.packageName);
+                  },
+                  child: const Text(
+                    'Open',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                )
+                :
+                GestureDetector(
+                  child: const Text(
+                    'Download',
+                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget space(double size) {
+    return SizedBox(height: size,);
+  }
+
   Widget screenShotsWidget() {
     return SizedBox(
       height: 170,
@@ -367,7 +466,7 @@ class _ViewAppState extends State<ViewApp> {
                     /*Navigator.of(context).push(
                       MaterialPageRoute(builder: (context) => ImageViewer(imageUrl: widget.screenshots[index],),)
                     );*/
-                    open(context, index);
+                    openPhotoGallery(context, index);
                   },
                   child: Image.network(
                     widget.screenshots[index],
@@ -405,4 +504,5 @@ class _ViewAppState extends State<ViewApp> {
       ],
     );
   }
+
 }
