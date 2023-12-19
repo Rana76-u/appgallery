@@ -1,5 +1,3 @@
-import 'dart:io';
-import 'package:appgallery/Models/check_permission.dart';
 import 'package:appgallery/Presentation/Widgets/image_viewer_gallery.dart';
 import 'package:appgallery/ViewApp%20Bloc/viewapp_bloc.dart';
 import 'package:appgallery/ViewApp%20Bloc/viewapp_events.dart';
@@ -8,8 +6,7 @@ import 'package:device_apps/device_apps.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
-import 'package:open_file/open_file.dart';
+import 'package:open_file_plus/open_file_plus.dart';
 
 // ignore: must_be_immutable
 class ViewApp extends StatefulWidget {
@@ -46,7 +43,6 @@ class _ViewAppState extends State<ViewApp> {
 
   //Useless
   bool isPermission = false;
-  var checkAllPermissions = CheckPermission();
   //
 
   bool downloading = false;
@@ -92,6 +88,7 @@ class _ViewAppState extends State<ViewApp> {
   }
 
   //Useless
+  /*var checkAllPermissions = CheckPermission();
   checkPermission() async {
     var permission = await checkAllPermissions.isStoragePermission();
     if (permission) {
@@ -100,12 +97,13 @@ class _ViewAppState extends State<ViewApp> {
       });
       startDownload();
     }
-  }
+  }*/
 
   startDownload() async {
     cancelToken = CancelToken();
+
     setState(() {
-      filePath = '/storage/emulated/0/Download/${widget.name}.apk';
+      filePath = '/storage/emulated/0/Download/${widget.name} ${widget.packageName}.apk';
       downloading = true;
       progress = 0;
     });
@@ -133,48 +131,14 @@ class _ViewAppState extends State<ViewApp> {
 
   openFile() {
     OpenFile.open(filePath);
+    print(filePath);
   }
 
-  //Useless (Later)
   cancelDownload() {
     cancelToken.cancel();
     setState(() {
       downloading = false;
     });
-  }
-
-
-  //Previously By ChatGPT
-  Future<void> _downloadAndOpenFile(BuildContext context) async {
-    final taskId = await FlutterDownloader.enqueue(
-      url: widget.fileLink,
-      savedDir: '/storage/emulated/0/Download/', // Change this to the desired directory
-      saveInPublicStorage: true,
-      showNotification: true,
-      openFileFromNotification: true,
-    );
-
-    FlutterDownloader.registerCallback((id, status, progress) {
-      print(3);
-      if (id == taskId && status == 3) { //DownloadTaskStatus.complete
-        print(4);
-        // The download is complete, open the file
-        _openDownloadedFile(context);
-        print(5);
-      }
-    });
-  }
-
-  Future<void> _openDownloadedFile(BuildContext context) async {
-    // Replace 'your_directory' with the same directory used for downloading
-    final filePath = '/storage/emulated/0/Download/Screenshot_1.png'; ///${widget.name}.apk
-
-    if (await File(filePath).exists()) {
-      OpenFile.open(filePath);
-    } else {
-      // Handle the case where the file does not exist
-      print('File not found');
-    }
   }
 
   @override
@@ -203,6 +167,9 @@ class _ViewAppState extends State<ViewApp> {
                   //space
                   space(20),
 
+                  downloading ?
+                  cancelButtons()
+                      :
                   //open btn
                   state.isUpdateAvailable
                       ?
@@ -378,6 +345,11 @@ class _ViewAppState extends State<ViewApp> {
                 child: GestureDetector(
                   onTap: () {
                     DeviceApps.uninstallApp(widget.packageName);
+
+                    //print(await File(filePath).exists());
+                    //print('/storage/emulated/0/Android/data/com.appgallery.appgallery/files/files/SplitShare.apk');
+                    //print('/storage/emulated/0/Download/SplitShare.apk');
+                    OpenFile.open('/storage/emulated/0/Download/s.png');
                   },
                   child: Text(
                     'Uninstall',
@@ -438,6 +410,37 @@ class _ViewAppState extends State<ViewApp> {
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget cancelButtons() {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            //width: MediaQuery.of(context).size.width*0.4,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+              border: Border.all(color: Colors.grey.shade400),
+              color: Colors.transparent,
+            ),
+            child:  Padding(
+              padding: const EdgeInsets.only(top: 10, bottom: 10),
+              child: Center(
+                child: GestureDetector(
+                  onTap: () {
+                    cancelDownload();
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.blue.shade200, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        )
       ],
     );
   }
