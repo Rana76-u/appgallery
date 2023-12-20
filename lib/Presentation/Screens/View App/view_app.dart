@@ -1,4 +1,5 @@
-import 'package:appgallery/Presentation/Widgets/image_viewer_gallery.dart';
+import 'package:appgallery/Models/download.dart';
+import 'package:appgallery/Models/open_photo.dart';
 import 'package:appgallery/ViewApp%20Bloc/viewapp_bloc.dart';
 import 'package:appgallery/ViewApp%20Bloc/viewapp_events.dart';
 import 'package:appgallery/ViewApp%20Bloc/viewapp_states.dart';
@@ -41,50 +42,32 @@ class ViewApp extends StatefulWidget {
 
 class _ViewAppState extends State<ViewApp> {
 
+  late ViewAppBloc viewAppBlocProvider;
+
   //Useless
   bool isPermission = false;
   //
 
-  bool downloading = false;
-  bool fileExists = false;
-  double progress = 0;
-  late String filePath;
   late CancelToken cancelToken;
 
   @override
   void initState() {
-    checkApp();
+    checkAppIsInstalled();
     super.initState();
+    viewAppBlocProvider = BlocProvider.of<ViewAppBloc>(context);
   }
 
-  void checkApp() async {
-    final blocProvider = BlocProvider.of<ViewAppBloc>(context);
+  void checkAppIsInstalled() async {
 
     bool tempIsInstalled =  await DeviceApps.isAppInstalled(widget.packageName);
-    blocProvider.add(BoolChange(isInstalled: tempIsInstalled, isUpdateAvailable: false));
+    viewAppBlocProvider.add(UpdateIsInstalledEvent(tempIsInstalled));
 
     if(tempIsInstalled){
       Application? app = await DeviceApps.getApp(widget.packageName);
       if(app!.versionName != widget.versionName){
-        blocProvider.add(BoolChange(isInstalled: tempIsInstalled, isUpdateAvailable: true));
+        viewAppBlocProvider.add(UpdateIsUpdateAvailableEvent(true));
       }
     }
-  }
-
-  void openPhotoGallery(BuildContext context, final int index) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => GalleryPhotoViewWrapper(
-          galleryItems: widget.screenshots,
-          backgroundDecoration: const BoxDecoration(
-            color: Colors.black,
-          ),
-          initialIndex: index,
-          scrollDirection: Axis.horizontal,
-        ),
-      ),
-    );
   }
 
   //Useless
@@ -99,12 +82,12 @@ class _ViewAppState extends State<ViewApp> {
     }
   }*/
 
-  startDownload() async {
+/*  startDownload() async {
     cancelToken = CancelToken();
 
     setState(() {
-      filePath = '/storage/emulated/0/Download/${widget.name} ${widget.packageName}.apk';
-      downloading = true;
+      filePath = '/storage/emulated/0/Download/${widget.name} ${widget.versionName}.apk';
+      state.downloading = true;
       progress = 0;
     });
 
@@ -113,7 +96,6 @@ class _ViewAppState extends State<ViewApp> {
           onReceiveProgress: (count, total) {
             setState(() {
               progress = (count / total);
-              print(progress);
             });
           }, cancelToken: cancelToken);
       setState(() {
@@ -139,7 +121,7 @@ class _ViewAppState extends State<ViewApp> {
     setState(() {
       downloading = false;
     });
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -162,12 +144,12 @@ class _ViewAppState extends State<ViewApp> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
 
-                  topAppInfo(),
+                  topAppInfo(state),
 
                   //space
                   space(20),
 
-                  downloading ?
+                  state.downloading ?
                   cancelButtons()
                       :
                   //open btn
@@ -195,7 +177,7 @@ class _ViewAppState extends State<ViewApp> {
     );
   }
 
-  Widget topAppInfo() {
+  Widget topAppInfo(ViewAppState state) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -204,12 +186,12 @@ class _ViewAppState extends State<ViewApp> {
           alignment: Alignment.center,
           children: [
             Visibility(
-              visible: downloading ? true : false,
+              visible: state.downloading ? true : false,
               child: SizedBox(
                 height: 65,
                 width: 65,
                 child: CircularProgressIndicator(
-                  value: progress,
+                  value: state.progress,
                   strokeWidth: 1.5,
                   //backgroundColor: Colors.grey,
                   valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue)
@@ -218,10 +200,10 @@ class _ViewAppState extends State<ViewApp> {
             ),
 
             Padding(
-              padding: EdgeInsets.all(downloading ? 15 : 0),
+              padding: EdgeInsets.all(state.downloading ? 15 : 0),
               child: SizedBox(
-                height: downloading ? 40 : 80,
-                width: downloading ? 40 :  80,
+                height: state.downloading ? 40 : 80,
+                width: state.downloading ? 40 :  80,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(15),
                   child: Image.network(
@@ -251,9 +233,9 @@ class _ViewAppState extends State<ViewApp> {
               ),
               //Progress
               Visibility(
-                visible: downloading ? true : false,
+                visible: state.downloading ? true : false,
                 child: Text(
-                  '${(progress*100).toStringAsFixed(1)}% of ${widget.size}',
+                  '${(state.progress*100).toStringAsFixed(1)}% of ${widget.size}',
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 11,
@@ -381,7 +363,11 @@ class _ViewAppState extends State<ViewApp> {
                 GestureDetector(
                   onTap: () {
                     //_downloadAndOpenFile(context);
-                    startDownload();
+                    Download(viewAppBlocProvider).startDownload(
+                        widget.name,
+                        widget.versionName,
+                        widget.fileLink,
+                    );
                   },
                   child: const Text(
                     'Update',
@@ -401,6 +387,9 @@ class _ViewAppState extends State<ViewApp> {
                 )
                 :
                 GestureDetector(
+                  onTap: () {
+                    Download(viewAppBlocProvider).startDownload(widget.name, widget.versionName, widget.fileLink);
+                  },
                   child: const Text(
                     'Download',
                     style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
@@ -430,7 +419,7 @@ class _ViewAppState extends State<ViewApp> {
               child: Center(
                 child: GestureDetector(
                   onTap: () {
-                    cancelDownload();
+                    Download(viewAppBlocProvider).cancelDownload();
                   },
                   child: Text(
                     'Cancel',
@@ -469,7 +458,8 @@ class _ViewAppState extends State<ViewApp> {
                     /*Navigator.of(context).push(
                       MaterialPageRoute(builder: (context) => ImageViewer(imageUrl: widget.screenshots[index],),)
                     );*/
-                    openPhotoGallery(context, index);
+
+                    OpenPhoto().openPhotoGallery(context, index, widget.screenshots);
                   },
                   child: Image.network(
                     widget.screenshots[index],
