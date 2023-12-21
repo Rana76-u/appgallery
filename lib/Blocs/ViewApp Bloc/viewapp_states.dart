@@ -1,3 +1,4 @@
+
 import 'package:equatable/equatable.dart';
 
 class ViewAppState extends Equatable{
@@ -36,7 +37,7 @@ class ViewAppState extends Equatable{
         isUpdateAvailable: isUpdateAvailable ?? this.isUpdateAvailable,
         downloading: downloading ?? this.downloading,
         fileExists: fileExists ?? this.fileExists,
-        progress: progress ?? this.progress
+        progress: progress ?? this.progress,
     );
   }
 
@@ -49,6 +50,6 @@ class ViewAppInitState extends ViewAppState {
             isUpdateAvailable: false,
             downloading: false,
             fileExists: false,
-            progress: 0
+            progress: 0,
   );
 }

@@ -1,10 +1,10 @@
-import 'package:appgallery/Bottom%20Navigation%20Bloc/bottom_navigation_bloc.dart';
-import 'package:appgallery/Bottom%20Navigation%20Bloc/bottom_navigation_events.dart';
-import 'package:appgallery/Bottom%20Navigation%20Bloc/bottom_navigation_states.dart';
 import 'package:appgallery/Presentation/Screens/Home/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../Blocs/Bottom Navigation Bloc/bottom_navigation_bloc.dart';
+import '../../Blocs/Bottom Navigation Bloc/bottom_navigation_events.dart';
+import '../../Blocs/Bottom Navigation Bloc/bottom_navigation_states.dart';
 import '../Screens/Notification Page/notification_page.dart';
 
 class BottomBar extends StatelessWidget {

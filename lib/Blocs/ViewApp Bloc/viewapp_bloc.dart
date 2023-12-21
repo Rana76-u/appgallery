@@ -1,5 +1,5 @@
-import 'package:appgallery/ViewApp%20Bloc/viewapp_events.dart';
-import 'package:appgallery/ViewApp%20Bloc/viewapp_states.dart';
+import 'package:appgallery/Blocs/ViewApp%20Bloc/viewapp_events.dart';
+import 'package:appgallery/Blocs/ViewApp%20Bloc/viewapp_states.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ViewAppBloc extends Bloc<ViewAppEvents, ViewAppState>{

@@ -1,22 +1,20 @@
-import 'package:appgallery/ViewApp%20Bloc/viewapp_events.dart';
 import 'package:dio/dio.dart';
 import 'package:open_file_plus/open_file_plus.dart';
-
-import '../ViewApp Bloc/viewapp_bloc.dart';
+import '../Blocs/ViewApp Bloc/viewapp_bloc.dart';
+import '../Blocs/ViewApp Bloc/viewapp_events.dart';
 
 class Download {
 
   final ViewAppBloc viewAppBloc;
-  late CancelToken cancelToken;
+  final CancelToken cancelToken;
 
-  Download(this.viewAppBloc);
+  Download(this.viewAppBloc, this.cancelToken);
 
   startDownload(
       String appName,
       String appVersion,
       String fileLink,
       ) async {
-    cancelToken = CancelToken();
 
     String filePath = '/storage/emulated/0/Download/$appName ($appVersion).apk';
     viewAppBloc.add(UpdateDownloadingEvent(true));
@@ -25,7 +23,9 @@ class Download {
       await Dio().download(fileLink, filePath,
           onReceiveProgress: (count, total) {
             viewAppBloc.add(UpdateProgressEvent((count / total)));
-          }, cancelToken: cancelToken);
+          },
+          cancelToken: cancelToken
+      );
       viewAppBloc.add(UpdateDownloadingEvent(false));
       viewAppBloc.add(UpdateFileExistsEvent(true));
       openFile(filePath);

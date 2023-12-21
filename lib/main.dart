@@ -1,8 +1,9 @@
-import 'package:appgallery/Bottom%20Navigation%20Bloc/bottom_navigation_bloc.dart';
-import 'package:appgallery/ViewApp%20Bloc/viewapp_bloc.dart';
+import 'package:appgallery/Blocs/Home%20Bloc/home_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'Blocs/Bottom Navigation Bloc/bottom_navigation_bloc.dart';
+import 'Blocs/ViewApp Bloc/viewapp_bloc.dart';
 import 'Presentation/Widgets/navigation_bar.dart';
 import 'firebase_options.dart';
 
@@ -24,6 +25,7 @@ class MyApp extends StatelessWidget {
         providers: [
           BlocProvider(create: (context) => BottomBarBloc(),),
           BlocProvider(create: (context) => ViewAppBloc(),),
+          BlocProvider(create: (context) => HomeBloc(),)
         ],
         child: MaterialApp(
           title: 'App Gallery',

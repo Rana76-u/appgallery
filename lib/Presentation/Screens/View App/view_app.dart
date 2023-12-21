@@ -1,13 +1,14 @@
 import 'package:appgallery/Models/download.dart';
 import 'package:appgallery/Models/open_photo.dart';
-import 'package:appgallery/ViewApp%20Bloc/viewapp_bloc.dart';
-import 'package:appgallery/ViewApp%20Bloc/viewapp_events.dart';
-import 'package:appgallery/ViewApp%20Bloc/viewapp_states.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:open_file_plus/open_file_plus.dart';
+
+import '../../../Blocs/ViewApp Bloc/viewapp_bloc.dart';
+import '../../../Blocs/ViewApp Bloc/viewapp_events.dart';
+import '../../../Blocs/ViewApp Bloc/viewapp_states.dart';
 
 // ignore: must_be_immutable
 class ViewApp extends StatefulWidget {
@@ -43,12 +44,11 @@ class ViewApp extends StatefulWidget {
 class _ViewAppState extends State<ViewApp> {
 
   late ViewAppBloc viewAppBlocProvider;
+  late CancelToken cancelToken;
 
   //Useless
   bool isPermission = false;
   //
-
-  late CancelToken cancelToken;
 
   @override
   void initState() {
@@ -150,16 +150,16 @@ class _ViewAppState extends State<ViewApp> {
                   space(20),
 
                   state.downloading ?
-                  cancelButtons()
+                  cancelButtons(state)
                       :
                   //open btn
                   state.isUpdateAvailable
                       ?
-                  buttons('update')
+                  buttons('update', state)
                       : state.isInstalled ?
-                  buttons('open')
+                  buttons('open', state)
                       :
-                  buttons('download'),
+                  buttons('download', state),
 
                   space(25),
 
@@ -308,7 +308,7 @@ class _ViewAppState extends State<ViewApp> {
     );
   }
 
-  Widget buttons(String action) {
+  Widget buttons(String action, ViewAppState state) {
     return Row(
       children: [
         //Uninstall button
@@ -362,8 +362,10 @@ class _ViewAppState extends State<ViewApp> {
                 child: action == 'update' ?
                 GestureDetector(
                   onTap: () {
+                    cancelToken = CancelToken();
                     //_downloadAndOpenFile(context);
-                    Download(viewAppBlocProvider).startDownload(
+                    Download(viewAppBlocProvider, cancelToken)
+                        .startDownload(
                         widget.name,
                         widget.versionName,
                         widget.fileLink,
@@ -388,7 +390,8 @@ class _ViewAppState extends State<ViewApp> {
                 :
                 GestureDetector(
                   onTap: () {
-                    Download(viewAppBlocProvider).startDownload(widget.name, widget.versionName, widget.fileLink);
+                    Download(viewAppBlocProvider, cancelToken)
+                        .startDownload(widget.name, widget.versionName, widget.fileLink);
                   },
                   child: const Text(
                     'Download',
@@ -403,7 +406,7 @@ class _ViewAppState extends State<ViewApp> {
     );
   }
 
-  Widget cancelButtons() {
+  Widget cancelButtons(ViewAppState state) {
     return Row(
       children: [
         Expanded(
@@ -419,7 +422,7 @@ class _ViewAppState extends State<ViewApp> {
               child: Center(
                 child: GestureDetector(
                   onTap: () {
-                    Download(viewAppBlocProvider).cancelDownload();
+                    Download(viewAppBlocProvider, cancelToken).cancelDownload();
                   },
                   child: Text(
                     'Cancel',

@@ -1,7 +1,6 @@
-
-import 'package:appgallery/Bottom%20Navigation%20Bloc/bottom_navigation_events.dart';
-import 'package:appgallery/Bottom%20Navigation%20Bloc/bottom_navigation_states.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'bottom_navigation_events.dart';
+import 'bottom_navigation_states.dart';
 
 class BottomBarBloc extends Bloc<BottomBarEvent, BottomBarState> {
   BottomBarBloc() : super(const BottomBarState(currentIndex: 0)) {
