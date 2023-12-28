@@ -1,13 +1,12 @@
 import 'package:appgallery/Models/download.dart';
 import 'package:appgallery/Models/open_photo.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:open_file_plus/open_file_plus.dart';
-
 import '../../../Blocs/ViewApp Bloc/viewapp_bloc.dart';
-import '../../../Blocs/ViewApp Bloc/viewapp_events.dart';
 import '../../../Blocs/ViewApp Bloc/viewapp_states.dart';
 
 // ignore: must_be_immutable
@@ -22,6 +21,9 @@ class ViewApp extends StatefulWidget {
   int downloadCount;
   List<dynamic> screenshots;
   List<dynamic> comments;
+  bool isInstalled;
+  bool isUpdateAvailable;
+  String docID;
 
   ViewApp({
     super.key,
@@ -35,6 +37,9 @@ class ViewApp extends StatefulWidget {
     required this.downloadCount,
     required this.screenshots,
     required this.comments,
+    required this.isInstalled,
+    required this.isUpdateAvailable,
+    required this.docID,
   });
 
   @override
@@ -52,23 +57,26 @@ class _ViewAppState extends State<ViewApp> {
 
   @override
   void initState() {
-    checkAppIsInstalled();
+    //checkAppIsInstalled();
     super.initState();
     viewAppBlocProvider = BlocProvider.of<ViewAppBloc>(context);
   }
 
-  void checkAppIsInstalled() async {
+/*  void checkAppIsInstalled() async {
 
     bool tempIsInstalled =  await DeviceApps.isAppInstalled(widget.packageName);
     viewAppBlocProvider.add(UpdateIsInstalledEvent(tempIsInstalled));
 
     if(tempIsInstalled){
       Application? app = await DeviceApps.getApp(widget.packageName);
+      print(widget.packageName);
+      print(app!.versionName);
+      print(widget.versionName);
       if(app!.versionName != widget.versionName){
         viewAppBlocProvider.add(UpdateIsUpdateAvailableEvent(true));
       }
     }
-  }
+  }*/
 
   //Useless
   /*var checkAllPermissions = CheckPermission();
@@ -80,47 +88,6 @@ class _ViewAppState extends State<ViewApp> {
       });
       startDownload();
     }
-  }*/
-
-/*  startDownload() async {
-    cancelToken = CancelToken();
-
-    setState(() {
-      filePath = '/storage/emulated/0/Download/${widget.name} ${widget.versionName}.apk';
-      state.downloading = true;
-      progress = 0;
-    });
-
-    try {
-      await Dio().download(widget.fileLink, filePath,
-          onReceiveProgress: (count, total) {
-            setState(() {
-              progress = (count / total);
-            });
-          }, cancelToken: cancelToken);
-      setState(() {
-        downloading = false;
-        fileExists = true;
-      });
-      openFile();
-    } catch (e) {
-      print(e);
-      setState(() {
-        downloading = false;
-      });
-    }
-  }
-
-  openFile() {
-    OpenFile.open(filePath);
-    print(filePath);
-  }
-
-  cancelDownload() {
-    cancelToken.cancel();
-    setState(() {
-      downloading = false;
-    });
   }*/
 
   @override
@@ -153,10 +120,12 @@ class _ViewAppState extends State<ViewApp> {
                   cancelButtons(state)
                       :
                   //open btn
-                  state.isUpdateAvailable
+                  widget.isUpdateAvailable //state
                       ?
                   buttons('update', state)
-                      : state.isInstalled ?
+                      :
+                  widget.isInstalled //state
+                      ?
                   buttons('open', state)
                       :
                   buttons('download', state),
@@ -348,7 +317,7 @@ class _ViewAppState extends State<ViewApp> {
         action != 'download' ?
         const SizedBox(width: 10,) : const SizedBox(),
 
-        //Update/open button
+        //Update/open button/Download
         Expanded(
           child: Container(
             //width: MediaQuery.of(context).size.width*0.4,
@@ -389,9 +358,21 @@ class _ViewAppState extends State<ViewApp> {
                 )
                 :
                 GestureDetector(
-                  onTap: () {
+                  onTap: () async {
+
+                    cancelToken = CancelToken();
+
+                    await FirebaseFirestore
+                        .instance
+                        .collection('apps')
+                        .doc(widget.docID)
+                        .update({
+                      'downloadCount': widget.downloadCount + 1
+                    });
+
                     Download(viewAppBlocProvider, cancelToken)
                         .startDownload(widget.name, widget.versionName, widget.fileLink);
+
                   },
                   child: const Text(
                     'Download',
@@ -421,7 +402,18 @@ class _ViewAppState extends State<ViewApp> {
               padding: const EdgeInsets.only(top: 10, bottom: 10),
               child: Center(
                 child: GestureDetector(
-                  onTap: () {
+                  onTap: () async {
+
+                    cancelToken = CancelToken();
+
+                    await FirebaseFirestore
+                        .instance
+                        .collection('apps')
+                        .doc(widget.docID)
+                        .update({
+                      'downloadCount': widget.downloadCount
+                    });
+
                     Download(viewAppBlocProvider, cancelToken).cancelDownload();
                   },
                   child: Text(
@@ -467,6 +459,18 @@ class _ViewAppState extends State<ViewApp> {
                   child: Image.network(
                     widget.screenshots[index],
                     fit: BoxFit.contain,
+                    loadingBuilder: (BuildContext context, Widget child,
+                        ImageChunkEvent? loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                              : null,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),

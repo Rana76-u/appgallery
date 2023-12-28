@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'Blocs/Bottom Navigation Bloc/bottom_navigation_bloc.dart';
 import 'Blocs/ViewApp Bloc/viewapp_bloc.dart';
+import 'Models/firebase_api.dart';
 import 'Presentation/Widgets/navigation_bar.dart';
 import 'firebase_options.dart';
 
@@ -12,6 +13,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await FirebaseApi().initNotifications();
   runApp(const MyApp());
 }
 

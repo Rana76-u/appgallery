@@ -117,6 +117,9 @@ class _HomePageState extends State<HomePage> {
                         Navigator.of(context).push(
                             PageRouteBuilder(
                               pageBuilder: (context, animation, secondaryAnimation) => ViewApp(
+                                  docID: snapshot.data!.docs[index].id,
+                                  isInstalled: isInstalled,
+                                  isUpdateAvailable: isUpdateAvailable,
                                   name: snapshot.data!.docs[index].get('name'),
                                   about: snapshot.data!.docs[index].get('about'),
                                   icon: snapshot.data!.docs[index].get('icon'),
@@ -200,6 +203,9 @@ class _HomePageState extends State<HomePage> {
                               Navigator.of(context).push(
                                   PageRouteBuilder(
                                     pageBuilder: (context, animation, secondaryAnimation) => ViewApp(
+                                        docID: snapshot.data!.docs[index].id,
+                                        isInstalled: isInstalled,
+                                        isUpdateAvailable: isUpdateAvailable,
                                         name: snapshot.data!.docs[index].get('name'),
                                         about: snapshot.data!.docs[index].get('about'),
                                         icon: snapshot.data!.docs[index].get('icon'),
@@ -258,6 +264,9 @@ class _HomePageState extends State<HomePage> {
                       Navigator.of(context).push(
                           PageRouteBuilder(
                             pageBuilder: (context, animation, secondaryAnimation) => ViewApp(
+                                docID: snapshot.data!.docs[index].id,
+                                isInstalled: isInstalled,
+                                isUpdateAvailable: isUpdateAvailable,
                                 name: snapshot.data!.docs[index].get('name'),
                                 about: snapshot.data!.docs[index].get('about'),
                                 icon: snapshot.data!.docs[index].get('icon'),
@@ -267,7 +276,7 @@ class _HomePageState extends State<HomePage> {
                                 versionName: snapshot.data!.docs[index].get('versionName'),
                                 downloadCount: snapshot.data!.docs[index].get('downloadCount'),
                                 screenshots: snapshot.data!.docs[index].get('screenshots'),
-                                comments: snapshot.data!.docs[index].get('comments')
+                                comments: snapshot.data!.docs[index].get('comments'),
                             ),
                             transitionsBuilder: (context, animation, secondaryAnimation, child) {
                               {
@@ -286,106 +295,112 @@ class _HomePageState extends State<HomePage> {
                           )
                       );
                     },
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        //icon - image
-                        SizedBox(
-                          height: 60,
-                          width: 60,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(15),
-                            child: Image.network(
-                                snapshot.data!.docs[index].get('icon')),
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 15),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          //icon - image
+                          SizedBox(
+                            height: 60,
+                            width: 60,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: Image.network(
+                                  snapshot.data!.docs[index].get('icon')),
+                            ),
                           ),
-                        ),
 
-                        //Texts
-                        Padding(
-                          padding: const EdgeInsets.only(left: 15),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                snapshot.data!.docs[index].get('name'),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(
-                                width: MediaQuery.of(context).size.width*0.5 - 55,
-                                child: Text(
-                                  snapshot.data!.docs[index].get('about'),
+                          //Texts
+                          Padding(
+                            padding: const EdgeInsets.only(left: 15),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  snapshot.data!.docs[index].get('name'),
                                   style: const TextStyle(
-                                      fontSize: 11,
-                                      overflow: TextOverflow.ellipsis
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              ),
-                              Text(
-                                snapshot.data!.docs[index].get('size'),
-                                style: const TextStyle(fontSize: 11),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        //free space
-                        const Expanded(child: SizedBox()),
-
-                        //open btn
-                        isUpdateAvailable
-                            ? ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                                PageRouteBuilder(
-                                  pageBuilder: (context, animation, secondaryAnimation) => ViewApp(
-                                      name: snapshot.data!.docs[index].get('name'),
-                                      about: snapshot.data!.docs[index].get('about'),
-                                      icon: snapshot.data!.docs[index].get('icon'),
-                                      size: snapshot.data!.docs[index].get('size'),
-                                      fileLink: snapshot.data!.docs[index].get('fileLink'),
-                                      packageName: snapshot.data!.docs[index].get('packageName'),
-                                      versionName: snapshot.data!.docs[index].get('versionName'),
-                                      downloadCount: snapshot.data!.docs[index].get('downloadCount'),
-                                      screenshots: snapshot.data!.docs[index].get('screenshots'),
-                                      comments: snapshot.data!.docs[index].get('comments')
+                                SizedBox(
+                                  width: MediaQuery.of(context).size.width*0.5 - 55,
+                                  child: Text(
+                                    snapshot.data!.docs[index].get('about'),
+                                    style: const TextStyle(
+                                        fontSize: 11,
+                                        overflow: TextOverflow.ellipsis
+                                    ),
                                   ),
-                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                    {
-                                      const begin = Offset(0.0, 1.0);
-                                      const end = Offset.zero;
-                                      const curve = Curves.ease;
-
-                                      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-
-                                      return SlideTransition(
-                                        position: animation.drive(tween),
-                                        child: child,
-                                      );
-                                    }
-                                  },
-                                )
-                            );
-                          },
-                          child: const Text(
-                            'Update',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  snapshot.data!.docs[index].get('size'),
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                              ],
+                            ),
                           ),
-                        )
-                            : isInstalled ?
-                        ElevatedButton(
-                          onPressed: () {
-                            DeviceApps.openApp(snapshot.data!.docs[index].get('packageName'));
-                          },
-                          child: const Text(
-                            'Open',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        )
-                            : const SizedBox(),
-                      ],
+
+                          //free space
+                          const Expanded(child: SizedBox()),
+
+                          //open btn
+                          isUpdateAvailable
+                              ? ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation, secondaryAnimation) => ViewApp(
+                                        docID: snapshot.data!.docs[index].id,
+                                        isInstalled: isInstalled,
+                                        isUpdateAvailable: isUpdateAvailable,
+                                        name: snapshot.data!.docs[index].get('name'),
+                                        about: snapshot.data!.docs[index].get('about'),
+                                        icon: snapshot.data!.docs[index].get('icon'),
+                                        size: snapshot.data!.docs[index].get('size'),
+                                        fileLink: snapshot.data!.docs[index].get('fileLink'),
+                                        packageName: snapshot.data!.docs[index].get('packageName'),
+                                        versionName: snapshot.data!.docs[index].get('versionName'),
+                                        downloadCount: snapshot.data!.docs[index].get('downloadCount'),
+                                        screenshots: snapshot.data!.docs[index].get('screenshots'),
+                                        comments: snapshot.data!.docs[index].get('comments')
+                                    ),
+                                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                      {
+                                        const begin = Offset(0.0, 1.0);
+                                        const end = Offset.zero;
+                                        const curve = Curves.ease;
+
+                                        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+                                        return SlideTransition(
+                                          position: animation.drive(tween),
+                                          child: child,
+                                        );
+                                      }
+                                    },
+                                  )
+                              );
+                            },
+                            child: const Text(
+                              'Update',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          )
+                              : isInstalled ?
+                          ElevatedButton(
+                            onPressed: () {
+                              DeviceApps.openApp(snapshot.data!.docs[index].get('packageName'));
+                            },
+                            child: const Text(
+                              'Open',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          )
+                              : const SizedBox(),
+                        ],
+                      ),
                     ),
                   );
                 }
